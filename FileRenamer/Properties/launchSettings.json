@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "FileRenamer": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\cab45\\Desktop\\Dev\\DotNet\\OpenSource\\ReactiveUIWebsite\\input\\reactive-extensions\\ReactiveTests.Tests\""
+    }
+  }
+}

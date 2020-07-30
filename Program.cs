@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,15 @@ namespace MarkdownWikiGenerator
         // 0 = dll src path, 1 = dest root
         static void Main(string[] args)
         {
+            var iobserverType = Type.GetType("System.IObserver`1[]");
+            //var t = iobserverType.GetGenericArguments()[0];
+
+            //var parameters = methodInfo.GetParameters();
+            //foreach (var p in parameters)
+            //{
+            //    BeautifyType(x.ParameterType);
+            //}
+
             // put dll & xml on same diretory.
             var target = "UniRx.dll"; // :)
             string dest = "md";
@@ -26,7 +36,7 @@ namespace MarkdownWikiGenerator
                 target = args[0];
                 dest = args[1];
             }
-            else if (args.Length == 3) 
+            else if (args.Length == 3)
             {
                 target = args[0];
                 dest = args[1];
@@ -35,6 +45,24 @@ namespace MarkdownWikiGenerator
 
             var types = MarkdownGenerator.Load(target, namespaceMatch);
 
+            OrginalMdWriter(dest, types);
+        }
+
+        private static void NewMdWriter(string dest, MarkdownableType[] types)
+        {
+            foreach (var g in types.GroupBy(x => x.Namespace).OrderBy(x => x.Key))
+            {
+                var sb = new StringBuilder();
+                foreach (var item in g.OrderBy(x => x.Name))
+                {
+                    sb.Append(item.ToString());
+                    File.WriteAllText(Path.Combine(dest, g.Key + ".md"), sb.ToString());
+                }
+            }
+        }
+
+        private static void OrginalMdWriter(string dest, MarkdownableType[] types)
+        {
             // Home Markdown Builder
             var homeBuilder = new MarkdownBuilder();
             homeBuilder.Header(1, "References");
