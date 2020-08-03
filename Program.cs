@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using MarkdownGenerator;
 
 namespace MarkdownWikiGenerator
 {
@@ -14,7 +15,7 @@ namespace MarkdownWikiGenerator
         // 0 = dll src path, 1 = dest root
         static void Main(string[] args)
         {
-            var iobserverType = Type.GetType("System.IObserver`1[]");
+            //var iobserverType = Type.GetType("System.IObserver`1[]");
             //var t = iobserverType.GetGenericArguments()[0];
 
             //var parameters = methodInfo.GetParameters();
@@ -45,18 +46,19 @@ namespace MarkdownWikiGenerator
 
             var types = MarkdownGenerator.Load(target, namespaceMatch);
 
-            OrginalMdWriter(dest, types);
+            NewMdWriter(dest, types);
         }
 
         private static void NewMdWriter(string dest, MarkdownableType[] types)
         {
             foreach (var g in types.GroupBy(x => x.Namespace).OrderBy(x => x.Key))
             {
-                var sb = new StringBuilder();
                 foreach (var item in g.OrderBy(x => x.Name))
                 {
-                    sb.Append(item.ToString());
-                    File.WriteAllText(Path.Combine(dest, g.Key + ".md"), sb.ToString());
+                    var typeDirectory = Path.Combine(dest, g.Key, item.Name[..Math.Min(15, item.Name.Length)]);
+                    Directory.CreateDirectory(typeDirectory);
+                    var x = new ClassSectionCreator();
+                    x.Create(item, typeDirectory);
                 }
             }
         }

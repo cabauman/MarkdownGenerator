@@ -19,9 +19,35 @@ namespace MarkdownWikiGenerator
             return Regex.Replace(isFull ? t.GetGenericTypeDefinition().FullName : t.GetGenericTypeDefinition().Name, @"`.+$", "") + "<" + innerFormat + ">";
         }
 
-        public static string ToMarkdownMethodInfo(MethodInfo methodInfo)
+        public static string ToMarkdownMethodInfo(MethodInfo methodInfo, bool excludeCodeQuote = false, bool excludeEmptyParentheses = false)
         {
             var isExtension = methodInfo.GetCustomAttributes<ExtensionAttribute>(false).Any();
+            var parameters = methodInfo.GetParameters();
+
+            if (excludeEmptyParentheses && parameters.Length == 0)
+            {
+                return methodInfo.Name;
+            }
+
+            var seq = parameters.Select(x =>
+            {
+                var suffix = x.HasDefaultValue ? (" = " + (x.DefaultValue ?? $"null")) : "";
+                if (excludeCodeQuote)
+                {
+                    return BeautifyType(x.ParameterType) + " " + x.Name + suffix;
+                }
+                else
+                {
+                    return "`" + BeautifyType(x.ParameterType) + "` " + x.Name + suffix;
+                }
+            });
+
+            return methodInfo.Name + "(" + (isExtension ? "this " : "") + string.Join(", ", seq) + ")";
+        }
+
+        public static string ToMarkdownMethodInfoWithoutParamNames(MethodInfo methodInfo, bool excludeCodeQuote = false)
+        {
+            var parameters = methodInfo.GetParameters();
 
             //if (methodInfo.IsGenericMethod)
             //{
@@ -29,37 +55,45 @@ namespace MarkdownWikiGenerator
             //    return Regex.Replace(methodInfo.GetGenericMethodDefinition().Name, @"`.+$", "") + "<" + innerFormat + ">";
             //}
 
-            var parameters = methodInfo.GetParameters();
-            foreach (var p in parameters)
+            if (parameters.Length == 0)
             {
-
+                return methodInfo.Name;
             }
 
             var seq = parameters.Select(x =>
             {
-                var suffix = x.HasDefaultValue ? (" = " + (x.DefaultValue ?? $"null")) : "";
-                return "`" + BeautifyType(x.ParameterType) + "` " + x.Name + suffix;
+                if (excludeCodeQuote)
+                {
+                    return BeautifyType(x.ParameterType);
+                }
+                else
+                {
+                    return $"`{BeautifyType(x.ParameterType)}`";
+                }
             });
 
-            return methodInfo.Name + "(" + (isExtension ? "this " : "") + string.Join(", ", seq) + ")";
+            return methodInfo.Name + "(" + string.Join(", ", seq) + ")";
         }
 
-        public static string ToMarkdownMethodInfo2(MethodInfo methodInfo)
+        public static string ToMarkdownConstructorInfo(ConstructorInfo constructorInfo)
         {
-            var isExtension = methodInfo.GetCustomAttributes<ExtensionAttribute>(false).Any();
-
-            if (methodInfo.IsGenericMethod)
+            string name;
+            if (constructorInfo.DeclaringType.IsGenericType)
             {
-                var innerFormat = string.Join(", ", methodInfo.GetGenericArguments().Select(x => BeautifyType(x)));
-                return Regex.Replace(methodInfo.GetGenericMethodDefinition().Name, @"`.+$", "") + "<" + innerFormat + ">";
+                var innerFormat = string.Join(", ", constructorInfo.DeclaringType.GetGenericArguments().Select(x => BeautifyType(x)));
+                return Regex.Replace(constructorInfo.DeclaringType.Name, @"`.+$", "") + "<" + innerFormat + ">";
+            }
+            else
+            {
+                name = constructorInfo.DeclaringType.Name;
             }
 
-            var seq = methodInfo.GetParameters().Select(x =>
+            var seq = constructorInfo.GetParameters().Select(x =>
             {
                 return "`" + BeautifyType(x.ParameterType) + "`";
             });
 
-            return methodInfo.Name + "(" + (isExtension ? "this " : "") + string.Join(", ", seq) + ")";
+            return name + "(" + string.Join(", ", seq) + ")";
         }
     }
 }

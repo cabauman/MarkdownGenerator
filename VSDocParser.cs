@@ -105,6 +105,7 @@ namespace MarkdownWikiGenerator
         public string Summary { get; set; }
         public string Remarks { get; set; }
         public Dictionary<string, string> Parameters { get; set; }
+        public Dictionary<string, string> TypeParameters { get; set; }
         public string Returns { get; set; }
         public IReadOnlyList<XmlDocumentSeeGenericType> SeeGenericTypes { get; set; }
         public IReadOnlyList<XmlDocumentSeeGenericMethod> SeeGenericMethods { get; set; }
@@ -164,6 +165,10 @@ namespace MarkdownWikiGenerator
                         .Select(e => Tuple.Create(e.Attribute("name").Value, e))
                         .Distinct(new Item1EqualityCompaerer<string, XElement>())
                         .ToDictionary(e => e.Item1, e => e.Item2.Value);
+                    var typeParameters = x.Elements("typeparam")
+                        .Select(e => Tuple.Create(e.Attribute("name").Value, e))
+                        .Distinct(new Item1EqualityCompaerer<string, XElement>())
+                        .ToDictionary(e => e.Item1, e => e.Item2.Value);
 
                     var className = (memberType == MemberType.Type)
                         ? match.Groups[2].Value + "." + match.Groups[3].Value
@@ -176,6 +181,7 @@ namespace MarkdownWikiGenerator
                         Summary = summary.Trim(),
                         Remarks = remarks.Trim(),
                         Parameters = parameters,
+                        TypeParameters = typeParameters,
                         Returns = returns.Trim()
                     };
                 })
