@@ -75,7 +75,7 @@ namespace MarkdownWikiGenerator
             return methodInfo.Name + "(" + string.Join(", ", seq) + ")";
         }
 
-        public static string ToMarkdownConstructorInfo(ConstructorInfo constructorInfo)
+        public static string ToMarkdownConstructorInfo(ConstructorInfo constructorInfo, bool includeParameterName = false)
         {
             string name;
             if (constructorInfo.DeclaringType.IsGenericType)
@@ -92,6 +92,14 @@ namespace MarkdownWikiGenerator
             {
                 return "`" + BeautifyType(x.ParameterType) + "`";
             });
+
+            if (includeParameterName)
+            {
+                seq = constructorInfo.GetParameters().Select(x =>
+                {
+                    return "`" + BeautifyType(x.ParameterType) + x.Name + "`";
+                });
+            }
 
             return name + "(" + string.Join(", ", seq) + ")";
         }

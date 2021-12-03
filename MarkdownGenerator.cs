@@ -31,7 +31,7 @@ namespace MarkdownWikiGenerator
                 .ToArray();
         }
 
-        IReadOnlyList<PropertyInfo> GetProperties()
+        public IReadOnlyList<PropertyInfo> GetProperties()
         {
             return type.GetProperties(BindingFlags.Public | BindingFlags.Instance/* | BindingFlags.NonPublic*/ | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty)
                 .Where(x => !x.IsSpecialName && !x.GetCustomAttributes<ObsoleteAttribute>().Any())
@@ -59,33 +59,33 @@ namespace MarkdownWikiGenerator
                 .ToArray();
         }
 
-        IReadOnlyList<ConstructorInfo> GetConstructors()
+        public IReadOnlyList<ConstructorInfo> GetConstructors()
         {
             return type.GetConstructors();
         }
 
-        IReadOnlyList<FieldInfo> GetFields()
+        public IReadOnlyList<FieldInfo> GetFields()
         {
             return type.GetFields(BindingFlags.Public | BindingFlags.Instance/* | BindingFlags.NonPublic*/ | BindingFlags.DeclaredOnly | BindingFlags.GetField | BindingFlags.SetField)
                 .Where(x => !x.IsSpecialName && !x.GetCustomAttributes<ObsoleteAttribute>().Any() && !x.IsPrivate)
                 .ToArray();
         }
 
-        IReadOnlyList<EventInfo> GetEvents()
+        public IReadOnlyList<EventInfo> GetEvents()
         {
             return type.GetEvents(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(x => !x.IsSpecialName && !x.GetCustomAttributes<ObsoleteAttribute>().Any())
                 .ToArray();
         }
 
-        IReadOnlyList<FieldInfo> GetStaticFields()
+        public IReadOnlyList<FieldInfo> GetStaticFields()
         {
             return type.GetFields(BindingFlags.Public | BindingFlags.Static/* | BindingFlags.NonPublic*/ | BindingFlags.DeclaredOnly | BindingFlags.GetField | BindingFlags.SetField)
                 .Where(x => !x.IsSpecialName && !x.GetCustomAttributes<ObsoleteAttribute>().Any() && !x.IsPrivate)
                 .ToArray();
         }
 
-        IReadOnlyList<PropertyInfo> GetStaticProperties()
+        public IReadOnlyList<PropertyInfo> GetStaticProperties()
         {
             return type.GetProperties(BindingFlags.Public | BindingFlags.Static/* | BindingFlags.NonPublic*/ | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty)
                 .Where(x => !x.IsSpecialName && !x.GetCustomAttributes<ObsoleteAttribute>().Any())
@@ -113,18 +113,47 @@ namespace MarkdownWikiGenerator
                 .ToArray();
         }
 
-        IReadOnlyList<MethodInfo> GetStaticMethods()
+        public IReadOnlyList<MethodInfo> GetStaticMethods()
         {
             return type.GetMethods(BindingFlags.Public | BindingFlags.Static/* | BindingFlags.NonPublic*/ | BindingFlags.DeclaredOnly | BindingFlags.InvokeMethod)
                 .Where(x => !x.IsSpecialName && !x.GetCustomAttributes<ObsoleteAttribute>().Any() && !x.IsPrivate)
                 .ToArray();
         }
 
-        IReadOnlyList<EventInfo> GetStaticEvents()
+        public IReadOnlyList<EventInfo> GetStaticEvents()
         {
             return type.GetEvents(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
                 .Where(x => !x.IsSpecialName && !x.GetCustomAttributes<ObsoleteAttribute>().Any())
                 .ToArray();
+        }
+
+        public string BuildConstructorsPage()
+        {
+            var mb = new MarkdownBuilder();
+
+            mb.Header(2, Beautifier.BeautifyType(type, false) + " Constructors");
+            mb.AppendLine();
+            mb.AppendLine($"Namespace: {type.Namespace}");
+            mb.AppendLine();
+            mb.AppendLine($"Assembly: {type.Assembly.ManifestModule.Name}");
+            mb.AppendLine();
+
+            var summary = commentLookup[type.FullName].FirstOrDefault(x => x.MemberType == MemberType.Type)?.Summary ?? string.Empty;
+            if (summary != string.Empty)
+            {
+                mb.AppendLine(summary);
+            }
+
+            mb.AppendLine();
+
+            var constructors = GetConstructors();
+
+            BuildTable(mb, "Constructors", constructors, commentLookup[type.FullName], x => Beautifier.BeautifyType(x.DeclaringType), x => "#ctor", x => Beautifier.ToMarkdownConstructorInfo(x));
+
+            var result = BuildConstructorSection(constructors);
+            mb.Append(result);
+
+            return mb.ToString();
         }
 
         public string BuildMethodsPage()
@@ -147,6 +176,151 @@ namespace MarkdownWikiGenerator
             mb.AppendLine();
 
             BuildTable(mb, "Methods", GetMethods(), commentLookup[type.FullName], x => Beautifier.BeautifyType(x.ReturnType), x => x.Name, x => Beautifier.ToMarkdownMethodInfoWithoutParamNames(x));
+
+            return mb.ToString();
+        }
+
+        public string BuildStaticMethodsPage()
+        {
+            var mb = new MarkdownBuilder();
+
+            mb.Header(2, Beautifier.BeautifyType(type, false) + " Methods");
+            mb.AppendLine();
+            mb.AppendLine($"Namespace: {type.Namespace}");
+            mb.AppendLine();
+            mb.AppendLine($"Assembly: {type.Assembly.ManifestModule.Name}");
+            mb.AppendLine();
+
+            var summary = commentLookup[type.FullName].FirstOrDefault(x => x.MemberType == MemberType.Type)?.Summary ?? string.Empty;
+            if (summary != string.Empty)
+            {
+                mb.AppendLine(summary);
+            }
+
+            mb.AppendLine();
+
+            BuildTable(mb, "Methods", GetStaticMethods(), commentLookup[type.FullName], x => Beautifier.BeautifyType(x.ReturnType), x => x.Name, x => Beautifier.ToMarkdownMethodInfoWithoutParamNames(x));
+
+            return mb.ToString();
+        }
+
+        public string BuildPropertiesPage()
+        {
+            var mb = new MarkdownBuilder();
+
+            mb.Header(2, Beautifier.BeautifyType(type, false) + " Properties");
+            mb.AppendLine();
+            mb.AppendLine($"Namespace: {type.Namespace}");
+            mb.AppendLine();
+            mb.AppendLine($"Assembly: {type.Assembly.ManifestModule.Name}");
+            mb.AppendLine();
+
+            var summary = commentLookup[type.FullName].FirstOrDefault(x => x.MemberType == MemberType.Type)?.Summary ?? string.Empty;
+            if (summary != string.Empty)
+            {
+                mb.AppendLine(summary);
+            }
+
+            mb.AppendLine();
+
+            BuildTable(mb, "Properties", GetProperties(), commentLookup[type.FullName], x => Beautifier.BeautifyType(x.PropertyType), x => x.Name, x => x.Name);
+
+            return mb.ToString();
+        }
+
+        public string BuildPropertyPage(PropertyInfo propertyInfo)
+        {
+            var mb = new MarkdownBuilder();
+
+            mb.HeaderWithCode(2, $"{Beautifier.BeautifyType(type)}.{propertyInfo.Name} Property");
+            mb.AppendLine();
+            mb.AppendLine($"Namespace: {type.Namespace}");
+            mb.AppendLine();
+            mb.AppendLine($"Assembly: {type.Assembly.ManifestModule.Name}");
+            mb.AppendLine();
+
+            var comment = commentLookup[type.FullName].FirstOrDefault(x => x.MemberName == propertyInfo.Name || x.MemberName.StartsWith(propertyInfo.Name + "`"));
+
+            var summary = comment?.Summary ?? string.Empty;
+            if (summary != string.Empty)
+            {
+                mb.AppendLine(summary);
+                mb.AppendLine();
+            }
+
+            var sb = new StringBuilder();
+            var returnType = Beautifier.BeautifyType(propertyInfo.PropertyType);
+            sb.Append($"public {returnType} {propertyInfo.Name}");
+            mb.Code("csharp", sb.ToString());
+
+            mb.AppendLine();
+
+            return mb.ToString();
+        }
+
+        public string BuildMethodPage(IEnumerable<MethodInfo> methodInfoList)
+        {
+            var sb = new StringBuilder();
+            foreach (var methodInfo in methodInfoList)
+            {
+                var result = BuildMethodPage(methodInfo);
+                sb.Append(result);
+                sb.AppendLine();
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+
+        public string BuildConstructorSection(IReadOnlyList<ConstructorInfo> constructorInfoList)
+        {
+            var mb = new MarkdownBuilder();
+
+            mb.HeaderWithCode(2, $"{Beautifier.BeautifyType(type)} Constructor");
+            mb.AppendLine();
+            mb.AppendLine($"Namespace: {type.Namespace}");
+            mb.AppendLine();
+            mb.AppendLine($"Assembly: {type.Assembly.ManifestModule.Name}");
+            mb.AppendLine();
+
+            foreach (var constructorInfo in constructorInfoList)
+            {
+                var comment = commentLookup[type.FullName].FirstOrDefault(x => x.MemberName == "#ctor");
+                if (comment == null)
+                {
+                    continue;
+                }
+
+                var summary = comment?.Summary ?? string.Empty;
+                if (summary != string.Empty)
+                {
+                    mb.AppendLine(summary);
+                    mb.AppendLine();
+                }
+
+                var sb = new StringBuilder();
+                var stat = constructorInfo.IsStatic ? "static " : "";
+                var abst = constructorInfo.IsAbstract ? "abstract " : "";
+                sb.Append($"public {stat}{abst}{Beautifier.ToMarkdownConstructorInfo(constructorInfo, true)}");
+                mb.Code("csharp", sb.ToString());
+
+                mb.AppendLine();
+
+                // TODO: Add Exceptions
+
+                if (comment.Parameters.Count > 0)
+                {
+                    mb.Header(3, "Parameters");
+                    mb.AppendLine();
+                    foreach (var parameter in comment.Parameters)
+                    {
+                        mb.CodeQuote(parameter.Key);
+                        mb.AppendLine();
+                        mb.AppendLine();
+                        mb.AppendLine(parameter.Value);
+                    }
+                }
+            }
 
             return mb.ToString();
         }

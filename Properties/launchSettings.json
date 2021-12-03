@@ -3,7 +3,7 @@
     "MarkdownGenerator": {
       "commandName": "Executable",
       "executablePath": "C:\\Users\\cab45\\Desktop\\Dev\\DotNet\\OpenSource\\MarkdownGenerator\\bin\\Debug\\netcoreapp3.1\\MarkdownGenerator.exe",
-      "commandLineArgs": "System.Reactive.dll md System.Reactive.Subjects"
+      "commandLineArgs": "System.Reactive.dll md System.Reactive.Linq"
     }
   }
 }
