@@ -55,7 +55,7 @@ namespace MarkdownWikiGenerator
             {
                 foreach (var item in g.OrderBy(x => x.Name))
                 {
-                    var typeDirectory = Path.Combine(dest, g.Key, item.Name[..Math.Min(15, item.Name.Length)]);
+                    var typeDirectory = Path.Combine(dest, g.Key, item.Name[..Math.Min(30, item.Name.Length)]);
                     Directory.CreateDirectory(typeDirectory);
                     var x = new ClassSectionCreator();
                     x.Create(item, typeDirectory);

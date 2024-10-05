@@ -83,7 +83,7 @@ namespace MarkdownWikiGenerator
                 type = Type.GetType(typeName);
             }
 
-            value = type.Name[..^3];
+            value = type.Name[..^2];
         }
 
         public override string ToString()
@@ -106,6 +106,7 @@ namespace MarkdownWikiGenerator
         public string Remarks { get; set; }
         public Dictionary<string, string> Parameters { get; set; }
         public Dictionary<string, string> TypeParameters { get; set; }
+        public Dictionary<string, string> Exceptions { get; set; }
         public string Returns { get; set; }
         public IReadOnlyList<XmlDocumentSeeGenericType> SeeGenericTypes { get; set; }
         public IReadOnlyList<XmlDocumentSeeGenericMethod> SeeGenericMethods { get; set; }
@@ -169,6 +170,10 @@ namespace MarkdownWikiGenerator
                         .Select(e => Tuple.Create(e.Attribute("name").Value, e))
                         .Distinct(new Item1EqualityCompaerer<string, XElement>())
                         .ToDictionary(e => e.Item1, e => e.Item2.Value);
+                    var exceptions = x.Elements("exception")
+                        .Select(e => Tuple.Create(e.Attribute("cref").Value, e))
+                        .Distinct(new Item1EqualityCompaerer<string, XElement>())
+                        .ToDictionary(e => e.Item1, e => e.Item2.Value);
 
                     var className = (memberType == MemberType.Type)
                         ? match.Groups[2].Value + "." + match.Groups[3].Value
@@ -182,6 +187,7 @@ namespace MarkdownWikiGenerator
                         Remarks = remarks.Trim(),
                         Parameters = parameters,
                         TypeParameters = typeParameters,
+                        Exceptions = exceptions,
                         Returns = returns.Trim()
                     };
                 })

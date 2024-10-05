@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MarkdownGenerator": {
+      "commandName": "Project",
+      "commandLineArgs": "System.Reactive.dll md"
+    }
+  }
+}
